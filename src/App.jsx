@@ -1,58 +1,44 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+import { useEffect, useState } from "react"
+import axios from "axios"
 
-const API_URL = import.meta.env.VITE_API_URL;
+const API_URL = "https://strava-backend-91ww.onrender.com"
 
 function App() {
-  const [ranking, setRanking] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [ranking, setRanking] = useState([])
+  const [athleteName, setAthleteName] = useState("")
 
   useEffect(() => {
+    setAthleteName(localStorage.getItem("athlete_name") || "")
     axios.get(`${API_URL}/ranking`)
-      .then(res => {
-        setRanking(res.data);
-        setLoading(false);
-      })
-      .catch(() => setLoading(false));
-  }, []);
+      .then(res => setRanking(res.data))
+      .catch(() => setRanking([]))
+  }, [])
+
+  const isInRanking = ranking.some(item => item.atleta === athleteName)
 
   return (
-    <div style={{ padding: "40px", fontFamily: "Arial, sans-serif" }}>
-      <h1>🏁 Ranking Strava</h1>
+    <div className="min-h-screen p-6 flex flex-col items-center justify-center bg-gray-900 text-white">
+      <h1 className="text-3xl font-bold mb-6">🏃‍♂️ Ranking Mensal - Strava</h1>
 
-      {loading && <p>Carregando...</p>}
-
-      {!loading && ranking.length > 0 ? (
-        <table border="1" cellPadding="10">
-          <thead>
-            <tr>
-              <th>Colocação</th>
-              <th>Atleta</th>
-              <th>Total KM</th>
-            </tr>
-          </thead>
-          <tbody>
-            {ranking.map((p, i) => (
-              <tr key={i}>
-                <td>{i + 1}º</td>
-                <td>{p.atleta}</td>
-                <td>{p.total_km.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      ) : (
-        <div>
-          <p>👋 Você ainda não está no ranking.</p>
-          <a href={`${API_URL}/auth/strava`}>
-            <button style={{ padding: 10, fontSize: 16, cursor: "pointer" }}>
-              🚴‍♂️ Entrar com Strava
-            </button>
-          </a>
-        </div>
+      {!isInRanking && (
+        <a
+          href={`${API_URL}/auth/strava`}
+          className="mb-6 bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+        >
+          Participar do Desafio
+        </a>
       )}
+
+      <div className="w-full max-w-md bg-white text-black rounded-lg shadow-md p-6">
+        {ranking.map((item, index) => (
+          <div key={index} className="flex justify-between border-b border-gray-300 py-2">
+            <span>{index + 1}º {item.atleta}</span>
+            <span>{item.total_km} km</span>
+          </div>
+        ))}
+      </div>
     </div>
-  );
+  )
 }
 
-export default App;
+export default App
