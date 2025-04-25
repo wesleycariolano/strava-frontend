@@ -34,7 +34,7 @@ function App() {
     axios.get(`${API_URL}/last_update`)
   .then(res => {
     console.log('Valor vindo do backend:', res.data.last_update); // <--- adicione isso
-    setLastUpdate(
+    setLastUpdate(  
       res.data.last_update
         ? (() => {
             // Código temporário, pode deixar aqui
@@ -44,6 +44,7 @@ function App() {
           })()
         : "Nunca" 
   )
+  })
   }, [startDate, endDate, type])
 
   // Busca rankings semanais
@@ -165,7 +166,7 @@ function App() {
           </>
         )}
       </div>
-    </div>
+      </div>
   )
 }
 
