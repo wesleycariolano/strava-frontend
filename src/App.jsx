@@ -3,15 +3,22 @@ import axios from "axios"
 
 const API_URL = "https://strava-backend-91ww.onrender.com"
 
+function formatDateInput(date) {
+  return date.toISOString().slice(0, 10)
+}
+
 function App() {
   const [ranking, setRanking] = useState([])
+  const [weeklyRankings, setWeeklyRankings] = useState([])
   const [athleteName, setAthleteName] = useState("")
   const [loading, setLoading] = useState(true)
   const [lastUpdate, setLastUpdate] = useState("")
-  const [year, setYear] = useState(new Date().getFullYear())
-  const [month, setMonth] = useState(new Date().getMonth() + 1)
-  const [weeks, setWeeks] = useState([])
-  const [week, setWeek] = useState("")
+  const [startDate, setStartDate] = useState(() => {
+    let d = new Date()
+    d.setDate(1)
+    return d
+  })
+  const [endDate, setEndDate] = useState(() => new Date())
   const [type, setType] = useState("all")
 
   // Pega nome do atleta do localStorage
@@ -19,18 +26,10 @@ function App() {
     setAthleteName(localStorage.getItem("athlete_name") || "")
   }, [])
 
-  // Busca semanas do mês
-  useEffect(() => {
-    axios.get(`${API_URL}/weeks?year=${year}&month=${month}`)
-      .then(res => setWeeks(res.data))
-      .catch(() => setWeeks([]))
-  }, [year, month])
-
-  // Busca ranking e data da última atualização
+  // Busca ranking principal e última atualização
   useEffect(() => {
     setLoading(true)
-    let url = `${API_URL}/ranking?year=${year}&month=${month}`
-    if (week) url += `&week=${week}`
+    let url = `${API_URL}/ranking?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
     if (type !== "all") url += `&type=${type}`
     axios.get(url)
       .then(res => setRanking(res.data))
@@ -40,13 +39,18 @@ function App() {
       .then(res => setLastUpdate(res.data.last_update
         ? new Date(res.data.last_update).toLocaleString()
         : "Nunca"))
-  }, [year, month, week, type])
+  }, [startDate, endDate, type])
+
+  // Busca rankings semanais
+  useEffect(() => {
+    let url = `${API_URL}/ranking_weekly?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
+    if (type !== "all") url += `&type=${type}`
+    axios.get(url)
+      .then(res => setWeeklyRankings(res.data))
+      .catch(() => setWeeklyRankings([]))
+  }, [startDate, endDate, type])
 
   const isInRanking = ranking.some(item => item.atleta === athleteName)
-  const months = [
-    "Janeiro","Fevereiro","Março","Abril","Maio","Junho",
-    "Julho","Agosto","Setembro","Outubro","Novembro","Dezembro"
-  ]
 
   return (
     <div className="min-h-screen p-6 flex flex-col items-center justify-center bg-gray-900 text-white">
@@ -56,21 +60,24 @@ function App() {
         Última atualização: {lastUpdate}
       </div>
 
+      {/* Seletor de data início/fim + tipo */}
       <div className="flex flex-wrap gap-2 mb-4 justify-center">
-        <select value={year} onChange={e=>setYear(Number(e.target.value))} className="bg-gray-700 rounded p-1">
-          {[2023,2024,2025].map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <select value={month} onChange={e=>setMonth(Number(e.target.value))} className="bg-gray-700 rounded p-1">
-          {months.map((m,i) => <option key={m} value={i+1}>{m}</option>)}
-        </select>
-        <select value={week} onChange={e=>setWeek(e.target.value)} className="bg-gray-700 rounded p-1">
-          <option value="">Mês inteiro</option>
-          {weeks.map(w => (
-            <option key={w.week} value={w.week}>
-              {w.start} a {w.end}
-            </option>
-          ))}
-        </select>
+        <input
+          type="date"
+          value={formatDateInput(startDate)}
+          max={formatDateInput(endDate)}
+          onChange={e => setStartDate(new Date(e.target.value))}
+          className="bg-gray-700 rounded p-1"
+        />
+        <span>a</span>
+        <input
+          type="date"
+          value={formatDateInput(endDate)}
+          min={formatDateInput(startDate)}
+          max={formatDateInput(new Date())}
+          onChange={e => setEndDate(new Date(e.target.value))}
+          className="bg-gray-700 rounded p-1"
+        />
         <select value={type} onChange={e=>setType(e.target.value)} className="bg-gray-700 rounded p-1">
           <option value="all">Corrida + Caminhada</option>
           <option value="run">Corrida</option>
@@ -87,6 +94,7 @@ function App() {
         </a>
       )}
 
+      {/* Ranking Principal */}
       <div className="w-full max-w-md bg-white text-black rounded-lg shadow-md p-6">
         {loading ? (
           <div className="text-center py-10 text-lg font-semibold text-gray-700">Atualizando ranking...</div>
@@ -105,6 +113,36 @@ function App() {
               <span className="font-bold">{item.total_km} km</span>
             </div>
           ))
+        )}
+      </div>
+
+      {/* Rankings Semanais */}
+      <div className="w-full max-w-md mt-10">
+        {weeklyRankings.length > 0 && (
+          <>
+            <h2 className="text-xl font-semibold mb-2 text-white text-center">🏅 Rankings Semanais</h2>
+            {weeklyRankings.map((week, i) => (
+              <div key={i} className="bg-white/10 rounded-xl shadow p-3 mb-6">
+                <div className="font-bold text-sm mb-2">{week.label}</div>
+                {week.ranking.length === 0 ? (
+                  <div className="text-gray-300 text-center">Sem registros.</div>
+                ) : (
+                  week.ranking.map((item, idx) => (
+                    <div key={idx} className="flex justify-between border-b border-gray-300 py-1 items-center">
+                      <span className="flex items-center gap-2">
+                        <span>{idx + 1}º</span>
+                        {item.profile_picture && (
+                          <img src={item.profile_picture} alt="avatar" className="w-7 h-7 rounded-full border" />
+                        )}
+                        {item.name}
+                      </span>
+                      <span className="font-bold">{item.km} km</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            ))}
+          </>
         )}
       </div>
     </div>
