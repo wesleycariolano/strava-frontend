@@ -52,11 +52,22 @@ function App() {
 
   const isInRanking = ranking.some(item => item.atleta === athleteName)
 
-  return (
-    <div className="min-h-screen p-6 flex flex-col items-center justify-center bg-gray-900 text-white">
-      <h1 className="text-3xl font-bold mb-3">🏃‍♂️ Ranking Strava</h1>
+  // Função para dividir os rankings semanais em grid 2x2
+  const getWeeklyGrid = () => {
+    const grid = [[], []]
+    weeklyRankings.slice(0, 4).forEach((semana, idx) => {
+      grid[Math.floor(idx / 2)].push(semana)
+    })
+    return grid
+  }
 
-      <div className="mb-3 text-sm text-gray-300">
+  return (
+    <div style={{ minHeight: '100vh', padding: '24px 0 40px 0', background: '#C30000', color: '#fff' }} className="flex flex-col items-center justify-center">
+      <h1 className="text-3xl font-bold mb-3 text-center" style={{ color: '#fff' }}>
+        🏃‍♂️ Ranking Ultra Movimento
+      </h1>
+
+      <div className="mb-3 text-sm text-gray-100" style={{ color: '#ffe' }}>
         Última atualização: {lastUpdate}
       </div>
 
@@ -67,18 +78,20 @@ function App() {
           value={formatDateInput(startDate)}
           max={formatDateInput(endDate)}
           onChange={e => setStartDate(new Date(e.target.value))}
-          className="bg-gray-700 rounded p-1"
+          className="rounded p-1"
+          style={{ background: "#fff", color: "#333" }}
         />
-        <span>a</span>
+        <span style={{ color: "#fff" }}>a</span>
         <input
           type="date"
           value={formatDateInput(endDate)}
           min={formatDateInput(startDate)}
           max={formatDateInput(new Date())}
           onChange={e => setEndDate(new Date(e.target.value))}
-          className="bg-gray-700 rounded p-1"
+          className="rounded p-1"
+          style={{ background: "#fff", color: "#333" }}
         />
-        <select value={type} onChange={e=>setType(e.target.value)} className="bg-gray-700 rounded p-1">
+        <select value={type} onChange={e => setType(e.target.value)} className="rounded p-1" style={{ background: "#fff", color: "#333" }}>
           <option value="all">Corrida + Caminhada</option>
           <option value="run">Corrida</option>
           <option value="walk">Caminhada</option>
@@ -95,7 +108,7 @@ function App() {
       )}
 
       {/* Ranking Principal */}
-      <div className="w-full max-w-md bg-white text-black rounded-lg shadow-md p-6">
+      <div className="w-full max-w-md bg-white text-black rounded-lg shadow-md p-6 mb-8" style={{ margin: "0 auto" }}>
         {loading ? (
           <div className="text-center py-10 text-lg font-semibold text-gray-700">Atualizando ranking...</div>
         ) : ranking.length === 0 ? (
@@ -117,31 +130,33 @@ function App() {
       </div>
 
       {/* Rankings Semanais */}
-      <div className="w-full max-w-md mt-10">
+      <div className="w-full mt-8 flex flex-col items-center justify-center">
         {weeklyRankings.length > 0 && (
           <>
-            <h2 className="text-xl font-semibold mb-2 text-white text-center">🏅 Rankings Semanais</h2>
-            {weeklyRankings.map((week, i) => (
-              <div key={i} className="bg-white/10 rounded-xl shadow p-3 mb-6">
-                <div className="font-bold text-sm mb-2">{week.label}</div>
-                {week.ranking.length === 0 ? (
-                  <div className="text-gray-300 text-center">Sem registros.</div>
-                ) : (
-                  week.ranking.map((item, idx) => (
-                    <div key={idx} className="flex justify-between border-b border-gray-300 py-1 items-center">
-                      <span className="flex items-center gap-2">
-                        <span>{idx + 1}º</span>
-                        {item.profile_picture && (
-                          <img src={item.profile_picture} alt="avatar" className="w-7 h-7 rounded-full border" />
-                        )}
-                        {item.name}
-                      </span>
-                      <span className="font-bold">{item.km} km</span>
-                    </div>
-                  ))
-                )}
-              </div>
-            ))}
+            <h2 className="text-xl font-semibold mb-6 text-white text-center">🏅 Rankings Semanais</h2>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "28px", maxWidth: 900 }}>
+              {weeklyRankings.slice(0, 4).map((week, i) => (
+                <div key={i} className="bg-white rounded-lg shadow text-black p-5" style={{ minWidth: 290 }}>
+                  <div className="font-bold text-sm mb-2 text-center">{week.label}</div>
+                  {week.ranking.length === 0 ? (
+                    <div className="text-gray-500 text-center">Sem registros.</div>
+                  ) : (
+                    week.ranking.map((item, idx) => (
+                      <div key={idx} className="flex justify-between border-b border-gray-300 py-2 items-center">
+                        <span className="flex items-center gap-2">
+                          <span>{idx + 1}º</span>
+                          {item.profile && (
+                            <img src={item.profile} alt="avatar" className="w-7 h-7 rounded-full border" />
+                          )}
+                          {item.atleta}
+                        </span>
+                        <span className="font-bold">{item.total_km} km</span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ))}
+            </div>
           </>
         )}
       </div>
