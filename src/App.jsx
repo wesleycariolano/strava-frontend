@@ -32,18 +32,17 @@ function App() {
     let url = `${API_URL}/ranking?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
     if (type !== "all") url += `&type=${type}`
     axios.get(`${API_URL}/last_update`)
-  .then(res => setLastUpdate(
-    res.data.last_update
-      ? (() => {
-          // Garante que a data seja interpretada como UTC
-          const d = new Date(res.data.last_update.endsWith('Z')
-            ? res.data.last_update
-            : res.data.last_update + 'Z');
-          // Força UTC-3 manualmente
-          d.setHours(d.getHours() - 3);
-          return d.toLocaleString('pt-BR');
-        })()
-      : "Nunca"
+  .then(res => {
+    console.log('Valor vindo do backend:', res.data.last_update); // <--- adicione isso
+    setLastUpdate(
+      res.data.last_update
+        ? (() => {
+            // Código temporário, pode deixar aqui
+            const d = new Date(res.data.last_update);
+            d.setHours(d.getHours() - 3);
+            return d.toLocaleString('pt-BR');
+          })()
+        : "Nunca"
   ))
   }, [startDate, endDate, type])
 
