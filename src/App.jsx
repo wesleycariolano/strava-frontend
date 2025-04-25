@@ -31,16 +31,17 @@ function App() {
     setLoading(true)
     let url = `${API_URL}/ranking?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
     if (type !== "all") url += `&type=${type}`
-    axios.get(url)
-      .then(res => setRanking(res.data))
-      .catch(() => setRanking([]))
-      .finally(() => setLoading(false))
     axios.get(`${API_URL}/last_update`)
-    .then(res => setLastUpdate(
-      res.data.last_update
-        ? new Date(res.data.last_update).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
-        : "Nunca"
-    ))
+  .then(res => setLastUpdate(
+    res.data.last_update
+      ? (() => {
+          // Garante que a data será parseada como UTC
+          const d = new Date(res.data.last_update + 'Z');
+          d.setHours(d.getHours() - 3); // Subtrai 3 horas
+          return d.toLocaleString('pt-BR');
+        })()
+      : "Nunca"
+  ))
   }, [startDate, endDate, type])
 
   // Busca rankings semanais
