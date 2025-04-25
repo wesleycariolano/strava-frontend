@@ -35,9 +35,12 @@ function App() {
   .then(res => setLastUpdate(
     res.data.last_update
       ? (() => {
-          // Garante que a data será parseada como UTC
-          const d = new Date(res.data.last_update + 'Z');
-          d.setHours(d.getHours() - 3); // Subtrai 3 horas
+          // Garante que a data seja interpretada como UTC
+          const d = new Date(res.data.last_update.endsWith('Z')
+            ? res.data.last_update
+            : res.data.last_update + 'Z');
+          // Força UTC-3 manualmente
+          d.setHours(d.getHours() - 3);
           return d.toLocaleString('pt-BR');
         })()
       : "Nunca"
