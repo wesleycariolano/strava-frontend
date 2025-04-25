@@ -26,33 +26,31 @@ function App() {
     setAthleteName(localStorage.getItem("athlete_name") || "")
   }, [])
 
-  // Busca ranking principal e última atualização
-useEffect(() => {
-  setLoading(true)
-  let url = `${API_URL}/ranking?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
-  if (type !== "all") url += `&type=${type}`
-
-  // 1) Busca o ranking principal
-  axios.get(url)
-    .then(res => setRanking(res.data))
-    .catch(() => setRanking([]))
-    .finally(() => setLoading(false))
-
-  // 2) Busca o last_update e já ajusta para o fuso de Brasília (UTC-3)
-  axios.get(`${API_URL}/last_update`)
-    .then(res => {
-      console.log('Valor vindo do backend:', res.data.last_update)
-      setLastUpdate(
-        res.data.last_update
-          ? (() => {
-              const d = new Date(res.data.last_update)
-              d.setHours(d.getHours() - 3)
-              return d.toLocaleString('pt-BR')
-            })()
-          : "Nunca"
-      )
-    })
-}, [startDate, endDate, type])
+  useEffect(() => {
+    setLoading(true)
+    let url = `${API_URL}/ranking?start=${formatDateInput(startDate)}&end=${formatDateInput(endDate)}`
+    if (type !== "all") url += `&type=${type}`
+  
+    // 1) Busca o ranking principal
+    axios.get(url)
+      .then(res => setRanking(res.data))
+      .catch(() => setRanking([]))
+      .finally(() => setLoading(false))   // <-- garante reset do loading
+  
+    // 2) Busca o last_update e já ajusta para o fuso de Brasília (UTC-3)
+    axios.get(`${API_URL}/last_update`)
+      .then(res => {
+        setLastUpdate(
+          res.data.last_update
+            ? (() => {
+                const d = new Date(res.data.last_update)
+                d.setHours(d.getHours() - 3)
+                return d.toLocaleString('pt-BR')
+              })()
+            : "Nunca"
+        )
+      })
+  }, [startDate, endDate, type])
 
   // Busca rankings semanais
   useEffect(() => {
