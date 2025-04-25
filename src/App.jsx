@@ -42,8 +42,8 @@ function App() {
             d.setHours(d.getHours() - 3);
             return d.toLocaleString('pt-BR');
           })()
-        : "Nunca"
-  ))
+        : "Nunca" 
+  )
   }, [startDate, endDate, type])
 
   // Busca rankings semanais
