@@ -36,9 +36,11 @@ function App() {
       .catch(() => setRanking([]))
       .finally(() => setLoading(false))
     axios.get(`${API_URL}/last_update`)
-      .then(res => setLastUpdate(res.data.last_update
-        ? new Date(res.data.last_update).toLocaleString()
-        : "Nunca"))
+    .then(res => setLastUpdate(
+      res.data.last_update
+        ? new Date(res.data.last_update).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+        : "Nunca"
+    ))
   }, [startDate, endDate, type])
 
   // Busca rankings semanais
